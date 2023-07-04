@@ -2,15 +2,13 @@ const express = require("express");
 const router = express.Router();
 const User = require("../modules/User");
 const { body, validationResult } = require("express-validator");
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
+// adding secret key for JavaWebToken generation for user authentication token to check when user login they dont tamper with user data and try to login as another user
+const JWT_Secret = process.env.JWT_SECRET;
 
-// adding secret key for JavaWebToken generation for user authentication token to check when user login they dont tamper with user data and try to login as another user  
-const JWT_Secret =  process.env.JWT_SECRET;
-
-
-// create a post request to /api/auth/createuser
+// create a post request to /api/auth/createuser for creating new user . No Login Required for this.
 router.post(
   // this is route :
   "/createuser",
@@ -35,7 +33,7 @@ router.post(
     }
     // checks if user exist currently in db
     let user = await User.findOne({ email: req.body.email });
-    
+
     // console.log(user);
     if (user) {
       return res
@@ -44,8 +42,8 @@ router.post(
     }
     // added try catch to avoid app from crashing
     try {
-        const salt =  bcrypt.genSaltSync(10);
-        const secPass = bcrypt.hashSync(req.body.password, salt);
+      const salt = bcrypt.genSaltSync(10);
+      const secPass = bcrypt.hashSync(req.body.password, salt);
       // A new user gets created and added to db
       user = await User.create({
         name: req.body.name,
@@ -53,17 +51,61 @@ router.post(
         email: req.body.email,
       });
       const data = {
-        user : {
-            id : user.id,
-        }
-       
-      }
-      const authToken = jwt.sign(data, 'shhhhh');
-      res.json({authToken});
+        user: {
+          id: user.id,
+        },
+      };
+      const authToken = jwt.sign(data, JWT_Secret);
+      res.json({ authToken });
     } catch (error) {
-      console.error("Some error occured");
       // Catches Error and prevents app from crashing
-      res.status(500).send("Some error occured");
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
+// create a post request to /api/auth/login to make a Login Request . No Login required for this .
+router.post(
+  // this is route :
+  "/login",
+
+  // this are validation parameters
+  [
+    body("email", "Email is invalid").isEmail(),
+    body("password", "Password should not be blank").exists(),
+  ],
+  // request-responses
+  async (req, res) => {
+    try {
+      // find user details for credentials entered by the user
+      let user = await User.findOne({ email: req.body.email });
+      // check if user email exist in db
+      if (!user) {
+        return res.status(400).send("Invalid Credentials");
+      }
+      // compare hash values of entered password and db password
+      let passwordCompare = await bcrypt.compare(
+        req.body.password,
+        user.password
+      );
+      // check if password is correct
+      if (!passwordCompare) {
+        return res.status(400).send("Invalid Credentials");
+      }
+      // create a payload to return to the user
+      const data = {
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      };
+      //   sign the payload using jwt secret key
+      const authToken = jwt.sign(data, JWT_Secret);
+      //   return authToken to verify a user
+      res.json({ authToken, data });
+    } catch (error) {
+      // Catches Error and prevents app from crashing
+      res.status(500).send("Internal Server Error");
     }
   }
 );
