@@ -1,17 +1,20 @@
-const connectToMongo = require('./db')
+const connectToMongo = require("./db");
 
+//check if successfuly connected to db
 connectToMongo();
 
-const express = require('express')
-const app = express()
-const port = 3000
+// add express js and setup node server at port 5000
+const express = require("express");
+const app = express();
+const port = 5000;
 
-
-app.use(express.json())
+// create routes using express
+app.use(express.json());
 // Available Routes
-app.use('/api/auth',require('./routes/auth'));
-app.use('/api/notes',require('./routes/notes'));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/notes", require("./routes/notes"));
 
+// localhost
 app.listen(port, () => {
-  console.log(`Example app listening on port : http://localhost:${port}`)
-})
+  console.log(`Example app listening on port : http://localhost:${port}`);
+});

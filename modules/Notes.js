@@ -1,23 +1,25 @@
-const mongoose = require('mongoose');
-const {Schema} = mongoose;
-const NotesSchema = new Schema({
-    title:{
-        type : String,
-        required : true,
-    },
-    description :{
-        type : String,
-        required : true,
-        unique : true ,
-    },
-    tag:{
-        type : String,
-        default : "general",
-    },
-    date:{
-        type :Date,
-        default : Date.now,
-    },
- });
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
- module.exports = mongoose.model('notes',NotesSchema);
+// created a schema or fixed structure for adding notes of users
+const NotesSchema = new Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  tag: {
+    type: String,
+    default: "general",
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+module.exports = mongoose.model("notes", NotesSchema);
