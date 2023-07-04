@@ -1,5 +1,5 @@
 const connectToMongo = require("./db");
-
+require('dotenv').config();
 //check if successfuly connected to db
 connectToMongo();
 
