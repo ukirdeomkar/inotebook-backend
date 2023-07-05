@@ -74,4 +74,62 @@ router.get(
   }
 );
 
+// ROUTE 3 : create a put request to /api/notes/updatenote for updating a note created by the user who is logged in . Login Required for this.
+router.put(
+  // route
+  "/updatenote/:id",
+  //   connect to middleware to get user id in the request from the authToken
+  fetchUser,
+  //   added validation for the notes
+  [
+    body("title", "The Title should be atleast 3 characters").isLength({
+      min: 3,
+    }),
+    body(
+      "description",
+      "Description should be atleast 5 characters long "
+    ).isLength({
+      min: 5,
+    }),
+  ],
+  async (req, res) => {
+    // check if some error exists
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      const { title, description, tag } = req.body;
+      const newNote = {};
+      if (title) {
+        newNote.title = title;
+      }
+      if (description) {
+        newNote.description = description;
+      }
+      if (tag) {
+        newNote.tag = tag;
+      }
+
+      let note = await Notes.findById(req.params.id);
+      if (!note) {
+        return res.status(404).send("Not Found");
+      }
+      if (note.user.toString() !== req.user.id) {
+        return res.status(401).send("Unauthorized access");
+      }
+      note = await Notes.findByIdAndUpdate(
+        req.params.id,
+        { $set: newNote },
+        { new: true }
+      );
+
+      return res.json(note);
+    } catch (error) {
+      // Catches Error and prevents app from crashing
+      return res.status(500).send(`Internal Server Error ${error}`);
+    }
+  }
+);
+
 module.exports = router;
