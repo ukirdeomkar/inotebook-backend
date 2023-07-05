@@ -4,11 +4,12 @@ const User = require("../modules/User");
 const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fetchUser = require('../middleware/fetchuser');
 
 // adding secret key for JavaWebToken generation for user authentication token to check when user login they dont tamper with user data and try to login as another user
 const JWT_Secret = process.env.JWT_SECRET;
 
-// create a post request to /api/auth/createuser for creating new user . No Login Required for this.
+// ROUTE 1 : create a post request to /api/auth/createuser for creating new user . No Login Required for this.
 router.post(
   // this is route :
   "/createuser",
@@ -64,7 +65,7 @@ router.post(
   }
 );
 
-// create a post request to /api/auth/login to make a Login Request . No Login required for this .
+// ROUTE 2 : create a post request to /api/auth/login to make a Login Request . No Login required for this .
 router.post(
   // this is route :
   "/login",
@@ -107,6 +108,30 @@ router.post(
       // Catches Error and prevents app from crashing
       res.status(500).send("Internal Server Error");
     }
+  }
+);
+
+// ROUTE 3 : create a post request to /api/auth/getuser for fetching user data . Login Required for this.
+
+router.post(
+  // this is route :
+  "/getuser",
+
+  // this are validation parameters
+  fetchUser,
+  // request-responses
+  async (req, res) => {
+    try {
+        userID = req.user.id;
+        // get all user data in {user} except password
+        user = await User.findById(userID).select("-password")
+        res.json(user);
+
+
+    } catch (error) {
+        // Catches Error and prevents app from crashing
+        res.status(500).send("Internal Server Error");
+      }
   }
 );
 
